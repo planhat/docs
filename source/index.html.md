@@ -3,11 +3,10 @@ title: API Reference
 
 language_tabs:
   - shell
-  - javascript
 
 toc_footers:
   - <a href='https://app.planhat.com'>Login to get your API Key</a>
-  - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
+  - <a href='https://www.planhat.com'>Customer Success API from Planhat</a>
 
 includes:
   - errors
@@ -17,170 +16,184 @@ search: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the Planhat API! It will help you interact with Planhat whenever you need something not covered by our standard integration.
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+The API has a few "open" end point that can be used to push data without the need to authenticate. This is ideal if all you need is to send some server side metrics,
+user activities, call logs etc. If you need more that that your API keys will give you access to the full API which will let you do almost anything related to you data in Planhat.
 
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+There is a default limit of approximately 200 API calls / minute. Should you send more requests you'll receive a "429 Too many requests" response. The limit of 200 calls is reset every 60-120 seconds, and each response includes information about your limit and how many calls you have left until next reset.
+
+`X-Rate-Limit-Limit: 200`
+`X-Rate-Limit-Remaining: 192`
+
+If you need more capacity let us know.
+
+In addition to the API, you can upload data in xlsx-format in Planhat. We have prepared a couple of template for this, and you can read more about it [Here](https://www.planhat.com/get-started/).
 
 # Authentication
-
-> To authorize, use this code:
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-```
-
 ```shell
 # With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
+curl https://api.planhat.com/myprofile
+  -H "Authorization: Bearer [PERSONAL_ACCESS_TOKEN]"
 ```
 
-```javascript
-const kittn = require('kittn');
+> Replace `[PERSONAL_ACCESS_TOKEN]` with your API key.
 
-let api = kittn.authorize('meowmeowmeow');
-```
+Most end-points require authentication by a Personal Access Token, managed from the Settings section in Planhat. Personal Access Tokens are static tokens created by you from within the App. Once a token is created, it will last forever. To disable access to a token, simply remove it.
 
-> Make sure to replace `meowmeowmeow` with your API key.
+Access tokens are personal, meaning that whatever automatic operation you perform with this token, will appear as if the user in question did it. Consider creating a separate API user and generate tokens for that user to keep things separated.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+The Token should be placed in the Authorization header in ONE of the following ways:
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+`Authorization: Bearer [PERSONAL_ACCESS_TOKEN]`
 
-`Authorization: meowmeowmeow`
+OR
+
+`Authorization: Basic [base64encode(PERSONAL_ACCESS_TOKEN:)]`
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+Note the colon after the token if you go with the Basic approach. It’s required even though there is no password.
 </aside>
 
-# Kittens
-
-## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
+# Companies
 
 ```json
 [
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
+{
+  "name": "Google",
+  "slug": "google",
+  "owner": "580549e00000000000000000",
+  "coOwner": "580549e00000000000000000",
+  "externalId": "12345",
+  "phase": "onboarding",
+  "tags":["Gold", "East Coast"],
+  "custom": {
+    "referenceOk": true
   }
+}
 ]
 ```
 
-This endpoint retrieves all kittens.
+Companies, sometimes referred to as "Accounts", are your customers. It also covers companies that previously were your customer and potentially new customers (prospects).
+Whatever the status of the company it's the same object and end-point.
 
-### HTTP Request
+`POST: https://api.planhat.com/companies`
 
-`GET http://example.com/api/kittens`
+`GET: https://api.planhat.com/companies/:id`
 
-### Query Parameters
+`PUT: https://api.planhat.com/companies/:id`
 
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+`DELETE: https://api.planhat.com/companies/:id`
 
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
 
-## Get a Specific Kitten
+### Properties
 
-```ruby
-require 'kittn'
+Property | Description
+--------- | -----------
+name* | Name of the Customer.
+slug | Provide a custom slug in case you plan on adding multiple customers with the exact same name. Could be our own customer id, or an increasing counter, anything as long as it's unique. If your customer names are unique then you don't have to provide this, Planhat will create one for you.
+owner | The the planhat user id of the Account Manager / Success Manager to whom this customer belongs. See section [Team (Planhat Users)] below for info about how to get the user ids.
+coOwner | A potential co-pilot, in case a single owner isn't enough. See section [Team (Planhat Users)] below for info about how to get the user ids.
+externalId | The customer id in your own system (will help us match other data you send over such as user activities, custom metrics etc). Not strictly required but if you've read this far it's most likely something you need.
+phase | Each customer can be assigned a lifecycle phase in Planhat. It's a text string that should match the name of one of the phases in Planhat. If the name doesn't match any of the phases in Planhat it will still save.
+tags | Array of strings to tag your customers. There is no separate end-point for tags so if you're going to update some of the tags for a given customer you'd have to update the whole array.
+custom | A flexible object with custom data, one level. Add any custom data points on the form. Use short and human friendly names as keys. For example "Plan" or "Subscription Plan" is better than "SUBSCRIPTION_PLAN", as this is how it will be displayed in Planhat. Date, Strings, Boolean, Number are allowed types.
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
 
-```python
-import kittn
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
+
+### Company lookup
+
+When you need a lightweight list of all companies in Planhat to match against your own id's etc.
+
+`GET: https://api.planhat.com/leancompanies?externalId=yourid123`
+
+
+
+# Team
+
+If you would like to add the owner property while creating new companies and you have the user's email but not the planhat id, then this end-point will help:
+
+`GET: https://api.planhat.com/users?email=yourcolleaguesname@yourcompany.com`
+
+
+# Contacts
+
+These are people working at your customers, business contacts as well as your actual end users.
+
+
+`POST:  https://api.planhat.com/endusers`
+
+`GET:  https://api.planhat.com/endusers/:id`
+
+`PUT:  https://api.planhat.com/endusers/:id`
+
+`DELETE:  https://api.planhat.com/endusers/:id`
+
+The GET request can be filtered to only list users at a specific company.
+
+`/endusers?c=55242d576b8275de65f567e8`
+
+Property | Description
+--------- | -----------
+companyId* | Planhat company id to decide which company profile a certain end-user belongs to.
+companyName | Name of the company the user belongs to. Only used to display which company a certain user belongs to in the aggregated contact/end-user lists. There is no validation that this name actually matches the company name of the companyId provided. To link a user to a certain company profile, only the companyId parameter will be considered.
+createDate | Date the contact was created, defaults to time of creation if not specified.
+externalId | The user id in your own database, or some other external system
+position | The role or position of this contact/user. e.g, "CFO"
+phone | You pick the telephone number format, any string will do.
+email | Email address of the user/contact
+featured | Boolean marker to single out contacts of special importance, typically set this to true if this is a user your sales team sometimes speak with, have the phone number to etc. Set to false if this is "just another user".
+tags | Array of Strings to tag each contact
+
+
+# Calls
 
 ```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
+# With the open end-point no auth required
+curl -X POST \
+-H "Content-Type: application/json" \
+-d '{"nr": "+4670123456", "externalUserId": "max123", "start": "2016-10-17T14:00:00.000Z", "end": "2016-10-17T14:02:00.000Z", "waiting": 10}' \
+https://api.planhat.com/199627f7-0d65-52cd-89b9-45b5ff561bem/calls
 ```
+> Remember to replace the sample tenant id above `199627f7-0d65-52cd-89b9-45b5ff561bem` with your own.
 
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
+```shell
+# You call also the authenticated end point to add calls
+curl -X POST \
+--user "[PERSONAL_ACCESS_TOKEN]"
+-H "Content-Type: application/json" \
+-d '{"nr": "+4670123456", "externalUserId": "max123", "start": "2016-10-17T14:00:00.000Z", "end": "2016-10-17T14:02:00.000Z", "waiting": 10}' \
+https://api.planhat.com/calls
 ```
+> Replace `[PERSONAL_ACCESS_TOKEN]` with your API key.
 
-> The above command returns JSON structured like this:
+When you're looking for a custom connection of your VOIP/phone solution to Planhat this is the end point.
 
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
-}
-```
 
-This endpoint retrieves a specific kitten.
+`POST:  https://api.planhat.com/calls`
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+`POST:  https://api.planhat.com/[YOUR_TENANT_UUIS]/calls` (open, no auth header)
 
-### HTTP Request
+`GET:  https://api.planhat.com/calls/:id`
 
-`GET http://example.com/kittens/<ID>`
+`PUT:  https://api.planhat.com/calls/:id`
 
-### URL Parameters
+`DELETE:  https://api.planhat.com/calls/:id`
 
-Parameter | Description
+
+Property | Description
 --------- | -----------
-ID | The ID of the kitten to retrieve
+nr* | Phone number of the contact you called, this will be used to match against customer and enduser in Planhat.
+externalUserId* | UserId in your on system, used to find a matching "agent" / team member
+start | When call started
+end | When the call ended
+waiting | In seconds, the waiting time before the "talk" started (waiting + talk_duration = end - start)
+
+
+
+
+
+# Other end-points
+
+There are plenty of end-points to do pretty much anything you'd like. Let us know what you need and will provide you with the relevant details.
