@@ -88,11 +88,11 @@
     </style>
     <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
     <link href="stylesheets/print.css" rel="stylesheet" media="print" />
-      <script src="javascripts/all.js"></script>
+      <script src="javascripts/all_nosearch.js"></script>
   </head>
 
   <body class="index" data-languages="[&quot;shell&quot;]">
-    <a href="#" id="nav-button">
+    <a href="https://www.planhat.com" id="nav-button">
       <span>
         NAV
         <img src="images/navbar.png" />
@@ -103,10 +103,6 @@
         <div class="lang-selector">
               <a href="#" data-language-name="shell">shell</a>
         </div>
-        <div class="search">
-          <input type="text" class="search" id="input-search" placeholder="Search">
-        </div>
-        <ul class="search-results"></ul>
       <div id="toc">
       </div>
         <ul class="toc-footer">
@@ -117,10 +113,7 @@
     <div class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
-        <h1 id="other-end-points">Other end-points</h1>
-
-<p>There are plenty of end-points to do pretty much anything you&rsquo;d like. Let us know what you need and will provide you with the relevant details.</p>
-
+        
           <h1 id="introduction">Introduction</h1>
 
 <p>Welcome to the Planhat API! It will help you interact with Planhat whenever you need something not covered by our standard integration.</p>
@@ -137,8 +130,8 @@ user activities, call logs etc. If you need more that that your API keys will gi
 
 <p>In addition to the API, you can upload data in xlsx-format in Planhat. We have prepared a couple of template for this, and you can read more about it <a href="https://www.planhat.com/get-started/">Here</a>.</p>
 
-<h1 id="authentication">Authentication</h1>
-<pre class="highlight shell"><code><span class="c"># With shell, you can just pass the correct header with each request</span>
+          <h1 id="authentication">Authentication</h1>
+<pre class="highlight shell"><code><span class="c"># For and-point that require authentication, simply pass the correct header with each request</span>
 curl https://api.planhat.com/myprofile
   -H <span class="s2">"Authorization: Bearer [PERSONAL_ACCESS_TOKEN]"</span>
 </code></pre>
@@ -163,22 +156,224 @@ curl https://api.planhat.com/myprofile
 Note the colon after the token if you go with the Basic approach. It’s required even though there is no password.
 </aside>
 
+          <h1 id="user-tracking">User Tracking</h1>
+
+<p>Keeping track of your end-user activity is an important part of the Customer Success effort. Getting started involves only two steps.</p>
+
+<ol>
+<li>Decide a few events (user actions) that you want to track.</li>
+<li>Decide how you want to get that information from your users to Planhat.</li>
+</ol>
+
+<h3 id="what-events-to-track">What events to track</h3>
+
+<p>The most obvious events are probably logins and page-views. Logins tend to be fairly inaccurate since it depends a lot on user behavior, some people login and logout a lot, others keep their sessions open. Page views is likely a better metric. Even though page views have relatively weak correlation with the value created, it does give you a general sense of activity level, and it&rsquo;s great to understand when a given user/customer was last active.</p>
+
+<p>In addition to page views you can probably find even more meaningful metrics such as “did an advanced search”, “created a campaign”, “added a team-member” etc. The exact metrics will obviously depend on the service you provide but 2-3 such events should be more than enough to get started. Add a weight if you want to indicate that some actions are more important/valuable than others.</p>
+
+<h3 id="how-to-track">How to track</h3>
+
+<p>There are 3 different ways of getting your end-user activity into Planhat.</p>
+
+<ol>
+<li>API</li>
+<li>Planhat Tracking Script</li>
+<li>Segment</li>
+</ol>
+
+<h2 id="1-api">1. API</h2>
+<pre class="highlight shell"><code><span class="c"># With the open end-point no auth required</span>
+curl -X POST <span class="se">\</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{"email": "ariana.wright_0@daimler.com", "action": "Logged in", "info": {"index": 20, "theme": "Blue"}, "date": "2016-10-13T08:00:00.000Z"}'</span> <span class="se">\</span>
+https://api.planhat.com/[YOUR_TENANT_ID]/activities
+</code></pre>
+
+<blockquote>
+<p>Remember to replace the tenant id above with your own.</p>
+</blockquote>
+
+<p>User activity relevant for your Customer Success strategies will typically involve a call to your servers.
+Once the activity/event is captured you can simply forward it from your servers to Planhat’s activity end-point:</p>
+
+<p><code class="prettyprint">POST: https://api.planhat.com/[YOUR_TENANT_ID]/activities</code></p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>name*</td>
+<td>Full name of the contact/user.</td>
+</tr>
+<tr>
+<td>email*</td>
+<td>The contact’s id (user_id) in your system (required if externalId not specified)</td>
+</tr>
+<tr>
+<td>externalId*</td>
+<td>The contact’s id (user_id) in your system (required if email not specified)</td>
+</tr>
+<tr>
+<td>companyExternalId</td>
+<td>Typically the account/customer id in your system, the same id have to be present as externlId in Planhat.This is required to automatically add new end-users to the correct customer profile in Planhat. If left out, a Customer Success Rep will manually have to assign new end-users to the appropriate customer, or Planhat will make a qualified guess when certain enough it will be correct.</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>optional parameter in case you want to give more RELATIVE importance to certain events, otherwise ignore or set to 1 which is the default.</td>
+</tr>
+<tr>
+<td>date</td>
+<td>Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.</td>
+</tr>
+<tr>
+<td>action</td>
+<td>Parameter describing the user activity. Typically on the form Action + Object, for example “Sent Invoice”,but it could also be just “Login” or whatever describes the activity event. This parameter is optional, but highly recommended and required if you want the appear in the event stream.</td>
+</tr>
+<tr>
+<td>info</td>
+<td>An optional, valid JSON object where you can add additional information related to the event. If the user activity was &ldquo;purchased a gift card&rdquo; then it might make sense to add info about the price, or product category.</td>
+</tr>
+</tbody></table>
+
+<h2 id="2-planhat-tracking-script">2. Planhat Tracking Script</h2>
+
+<p>Your second option is adding a a small tracking script that we provide to your application
+Like any tracking script it’s a tiny snippet (&lt; 1 kb) you place just before the closing </head> tag.
+The snippet will asynchronously load the tracking script to send data directly from your users to Planhat.
+Just like Google Analytics or any other tracking script it won&rsquo;t slow down you app or have any other noticeable impact on your users.</p>
+
+<p><code class="prettyprint">&lt;script type=&quot;text/javascript&quot;&gt;
+var plantrack=plantrack||[];!function(){for(var t=[&quot;init&quot;,&quot;identify&quot;,&quot;track&quot;],
+a=function(t){return function(){plantrack.push([t].concat(Array.prototype.slice.call(arguments,0)))}},
+n=0;n&lt;t.length;n++)plantrack[t[n]]=a(t[n])}(),plantrack.load=function(t,a){plantrack._endpoint=t,a&amp;&amp;plantrack.init(a);
+var n=document.createElement(&quot;script&quot;);n.type=&quot;text/javascript&quot;,n.async=!0,
+n.src=&quot;https://app.planhat.com/analytics/plantrack.min.js&quot;;
+var r=document.getElementsByTagName(&quot;script&quot;)[0];r.parentNode.insertBefore(n,r)};
+plantrack.load(&quot;https://api.planhat.com/analytics/[YOUR_TENANT_TOKEN]&quot;);
+&lt;/script&gt;</code></p>
+
+<p>Then in your application, identify users as they login. This information is saved in a cookie (&ldquo;_plantrack&rdquo;) and used to identify the user in subsequent requests.</p>
+
+<p><code class="prettyprint">plantrack.identify(USER_ID, {
+email: USER_EMAIL,
+name: USER_NAME,
+companyId: CUSTOMER_ID
+});</code></p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>USER_ID</td>
+<td>The User Id in your database, or some other relevant id. Highly recommended and required if no USER_EMAIL is provided.</td>
+</tr>
+<tr>
+<td>USER_EMAIL</td>
+<td>The user&rsquo;s email, highly recommended and required if no USER_ID is provided.</td>
+</tr>
+<tr>
+<td>USER_NAME</td>
+<td>The full name of this contact / user. If not provided we&rsquo;ll try to use the email instead.</td>
+</tr>
+<tr>
+<td>CUSTOMER_ID</td>
+<td>The customer id (account id) added in Planhat as &ldquo;externalId&rdquo;. Typically this would be the account-id in your own database. If you provide this id then Planhat can automatically map new (or &ldquo;duplicate&rdquo;) users to the correct customer profile.</td>
+</tr>
+</tbody></table>
+
+<p>After that, when the event you would like to track happens simply call
+plantrack.track(ACTION, [EXTRA_INFO]) from your app, for example:</p>
+
+<p><code class="prettyprint">plantrack.track(&quot;created a new project&quot;, {&quot;weight&quot;: 7});</code></p>
+
+<p>User information stored in the cookie (most importantly USER_ID) will automatically be added to all tracking calls.</p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>ACTION</td>
+<td>Description of the event. Examples could be &ldquo;Added a team Member&rdquo;, &ldquo;Downloaded a Report&rdquo;.</td>
+</tr>
+</tbody></table>
+
+<p>If you can make the actions somewhat specific it&rsquo;s typically valuable.
+For example the action &ldquo;Viewed a Page&rdquo; could be further specified like &ldquo;Viewed Settings Page&rdquo;, or &ldquo;Viewed Page &lsquo;path/to/page&rsquo;&rdquo;
+EXTRA_INFO / WEIGHT | Most likely the actions your end-users take in your service are not equally important. Generating a report, adding a comment, creating a project etc perhaps means more than a simple page view. To reflect this a parameter &ldquo;weight&rdquo; can optionally be added to each tracking call as a way to indicate the relative importance of different actions. Since it&rsquo;s relative, the absolute value (baseline) doesn&rsquo;t matter. But to make it readable in Planhat a guideline is to have an average user accumulate weights of 100 or less over a month.</p>
+
+<aside class="notice">
+If you know you&rsquo;ll be adding multiple tracking scripts and don&rsquo;t want to use Segment consider
+creating your own container and adding the tracking to that &ldquo;proxy&rdquo; as described in [this
+quora answer](http://www.quora.com/Whats-the-best-way-to-use-Google-Analytics-and-Mixpanel).
+</aside>
+
+<h2 id="3-segment">3. Segment</h2>
+
+<p>The third option is if you’re using Segment as intermediary hub for you user data. Then you could toggle Planhat on in your Segment integrations, and add your Planhat API Key which you can generate in Planhat under App Settings &gt; API Access. Note that Segment is a service with it’s own license cost.</p>
+
+          <h1 id="metrics">Metrics</h1>
+<pre class="highlight shell"><code>curl -X POST <span class="se">\</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'[{"dimensionId": "flightTime", "value": 1, "companyExternalId": "airbus"}, {"dimensionId": "debtRatio", "value": 5.2, "companyExternalId": "boing"}]'</span> <span class="se">\</span>
+https://api.planhat.com/[YOUR_TENANT_TOKEN]/dimensiondata
+</code></pre>
+
+<p>While User Activity says a lot about user engagement, it doesn&rsquo;t neccesarily reflect the value created. Dimension Data is a set of metrics to understand how well you customers are doing, and the value they get out of your service.</p>
+
+<p>Depending on what metrics you pick you might either want to send it as it happens or once a day. Number of user logins for example. You could either send an post everytime a user logs in, or you could save logins at your end and once a day send the total count for the day to planhat. Typically the more granular data you send to planhat, the more options you&rsquo;ll have to later crunch that data.</p>
+
+<p>Note: The end point accepts either a single object or an array, which can be useful if you run a batch update with some intervall, or if you initially would like to load historical data.</p>
+
+<p><code class="prettyprint">POST: https://api.planhat.com/[YOUR_TENANT_TOKEN]/dimensiondata</code></p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>dimensionId*</td>
+<td>Any string without spaces or special characters. If you&rsquo;re sending &ldquo;Share of Active Users&rdquo; a good dimensionId might be &ldquo;activeusershare&rdquo;. It&rsquo;s not displayed in Planhat but will be used when building Mealth Metrics / Success Indicators in Planhat.</td>
+</tr>
+<tr>
+<td>value*</td>
+<td>The raw (number) value you would like to set.</td>
+</tr>
+<tr>
+<td>companyExternalId</td>
+<td>This is the company id in your systems. For this to work the profiles in Planhat will need to have this externalId set.</td>
+</tr>
+<tr>
+<td>date</td>
+<td>Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.</td>
+</tr>
+<tr>
+<td>assetExtId</td>
+<td>Most likely you should leave this out, let us know if you need details about how to work with multiple assets.</td>
+</tr>
+</tbody></table>
+
           <h1 id="companies">Companies</h1>
-<pre class="highlight json"><code><span class="p">[</span><span class="w">
-</span><span class="p">{</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Google"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"slug"</span><span class="p">:</span><span class="w"> </span><span class="s2">"google"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"owner"</span><span class="p">:</span><span class="w"> </span><span class="s2">"580549e00000000000000000"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"coOwner"</span><span class="p">:</span><span class="w"> </span><span class="s2">"580549e00000000000000000"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"externalId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"12345"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"phase"</span><span class="p">:</span><span class="w"> </span><span class="s2">"onboarding"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"tags"</span><span class="p">:[</span><span class="s2">"Gold"</span><span class="p">,</span><span class="w"> </span><span class="s2">"East Coast"</span><span class="p">],</span><span class="w">
-  </span><span class="nt">"custom"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"referenceOk"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span><span class="p">]</span><span class="w">
-</span></code></pre>
+<pre class="highlight shell"><code>curl -X POST <span class="se">\</span>
+--user <span class="s2">"[PERSONAL_ACCESS_TOKEN]"</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{"name": "Google", "externalId": "12345abcd", "phase": "onboarding", "tags": ["Gold", "East Coast"], "custom": {"referenceOk": true}}'</span> <span class="se">\</span>
+https://api.planhat.com/companies
+</code></pre>
+
+<blockquote>
+<p>Replace <code class="prettyprint">[PERSONAL_ACCESS_TOKEN]</code> with your API key.</p>
+</blockquote>
 
 <p>Companies, sometimes referred to as &ldquo;Accounts&rdquo;, are your customers. It also covers companies that previously were your customer and potentially new customers (prospects).
 Whatever the status of the company it&rsquo;s the same object and end-point.</p>
@@ -238,12 +433,6 @@ Whatever the status of the company it&rsquo;s the same object and end-point.</p>
 <p>When you need a lightweight list of all companies in Planhat to match against your own id&rsquo;s etc.</p>
 
 <p><code class="prettyprint">GET: https://api.planhat.com/leancompanies?externalId=yourid123</code></p>
-
-          <h1 id="team">Team</h1>
-
-<p>If you would like to add the owner property while creating new companies and you have the user&rsquo;s email but not the planhat id, then this end-point will help:</p>
-
-<p><code class="prettyprint">GET: https://api.planhat.com/users?email=yourcolleaguesname@yourcompany.com</code></p>
 
           <h1 id="contacts">Contacts</h1>
 
@@ -316,7 +505,7 @@ https://api.planhat.com/199627f7-0d65-52cd-89b9-45b5ff561bem/calls
 <blockquote>
 <p>Remember to replace the sample tenant id above <code class="prettyprint">199627f7-0d65-52cd-89b9-45b5ff561bem</code> with your own.</p>
 </blockquote>
-<pre class="highlight shell"><code><span class="c"># You call also the authenticated end point to add calls</span>
+<pre class="highlight shell"><code><span class="c"># You call also use the authenticated end point to create calls</span>
 curl -X POST <span class="se">\</span>
 --user <span class="s2">"[PERSONAL_ACCESS_TOKEN]"</span>
 -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
@@ -332,7 +521,7 @@ https://api.planhat.com/calls
 
 <p><code class="prettyprint">POST:  https://api.planhat.com/calls</code></p>
 
-<p><code class="prettyprint">POST:  https://api.planhat.com/[YOUR_TENANT_UUIS]/calls</code> (open, no auth header)</p>
+<p><code class="prettyprint">POST:  https://api.planhat.com/[YOUR_TENANT_ID]/calls</code> (open, no auth header)</p>
 
 <p><code class="prettyprint">GET:  https://api.planhat.com/calls/:id</code></p>
 
@@ -367,6 +556,16 @@ https://api.planhat.com/calls
 <td>In seconds, the waiting time before the &ldquo;talk&rdquo; started (waiting + talk_duration = end - start)</td>
 </tr>
 </tbody></table>
+
+          <h1 id="team">Team</h1>
+
+<p>If you would like to add the owner property while creating new companies and you have the user&rsquo;s email but not the planhat id, then this end-point will help:</p>
+
+<p><code class="prettyprint">GET: https://api.planhat.com/users?email=yourcolleaguesname@yourcompany.com</code></p>
+
+          <h1 id="other-end-points">Other end-points</h1>
+
+<p>There are plenty of end-points to do pretty much anything you&rsquo;d like. Let us know what you need and will provide you with the relevant details.</p>
 
       </div>
       <div class="dark-box">
