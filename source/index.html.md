@@ -10,19 +10,14 @@ toc_footers:
 
 includes:
   - intro
+  - authentication
+  - activity
+  - metrics
   - companies
-  - team
   - contacts
   - calls
+  - team
+  - other
 
-search: true
+search: false
 ---
-
-
-
-
-
-
-# Other end-points
-
-There are plenty of end-points to do pretty much anything you'd like. Let us know what you need and will provide you with the relevant details.
