@@ -320,7 +320,60 @@ quora answer](http://www.quora.com/Whats-the-best-way-to-use-Google-Analytics-an
 
 <h2 id="3-segment">3. Segment</h2>
 
-<p>The third option is if you’re using Segment as intermediary hub for you user data. Then you could toggle Planhat on in your Segment integrations, and add your Planhat API Key which you can generate in Planhat under App Settings &gt; API Access. Note that Segment is a service with it’s own license cost.</p>
+<blockquote>
+<p>Sample post to test the end-point without the need to pass through Segment.  Note the intentional colon (:) after your access token.</p>
+</blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="se">\</span>
+--user <span class="s2">"[PERSONAL_ACCESS_TOKEN]:"</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{"type": "identify", "traits": {"name":  "Peter Gibbons", "email": "peter@initech.com", "companyId": "ABCDE"}}'</span> <span class="se">\</span>
+https://api.planhat.com/dock/segment
+</code></pre>
+
+<p>As a third option, Segment can be used to send User Events (user tracking data) to Planhat. When we receive an event from Segment,
+we use the &ldquo;user id&rdquo; and/or email to to know which Planhat user the event refers to.
+The events are then displayed in Planhat both on user and company level. When presented in text form, we display it as [user name]  + [event].
+Preferably use event names on the form &ldquo;verb + noun&rdquo;. For example &ldquo;downloaded a report&rdquo; is a better event name then &ldquo;report_dowloaded&rdquo;.</p>
+
+<p>Note that Segment is a service with it’s own license cost.</p>
+
+<blockquote>
+<p>Expected data formats</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"identify"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"12345"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"traits"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Peter Gibbons"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"email"</span><span class="p">:</span><span class="s2">"peter@initech.com"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"companyId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ABCDE"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"track"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"12345"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"downloaded a report"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"properties"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<h3 id="creating-users-automatically">Creating Users Automatically</h3>
+
+<p>If we receive a call (Identify or Track) for a user that doesn&rsquo;t yet exist in Planhat, and the request contains a customer id, then Planhat will automatically create a new user for you. This is highly recommended unless you create users in Planhat automatically through the API. If you&rsquo;re providing an email address it is also likely that Planhat will be able to map a new end user to the correct customer account with sufficient accuracy to avoid manual confirmation, however most Segment set-ups rely not on email but in user id.</p>
+
+<h3 id="ignored-events">Ignored Events</h3>
+
+<p>Events will be completely ignored when any of the following conditions are met</p>
+
+<ol>
+<li>Request is not of type &ldquo;Identify&rdquo; or &ldquo;Track&rdquo;</li>
+<li>Both User Id and Email are missing</li>
+</ol>
+
+<h3 id="un-assigned-users">Un Assigned Users</h3>
+
+<p>If we receive a call (Identify or Track) for a user that doesn&rsquo;t yet exist in Planhat, and the request does NOT contain information about which customer it relates to, and we have no other way to relate the user to a customer with reasonable confidence, then it will be discarded but added a report in Planhat to help you identify potential issues with the integration. Typically this may happen when users that loggedin (with a persistant session) before the integration was activated. Events from these users will end up in the log, and eventually as the user gets logged out and login again it&rsquo;ll start working as expected.</p>
 
           <h1 id="metrics">Metrics</h1>
 <pre class="highlight shell"><code>curl -X POST <span class="se">\</span>
