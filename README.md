@@ -10,6 +10,29 @@
 
 <p align="center"><em>The example above was created with Slate. Check it out at <a href="https://lord.github.io/slate">lord.github.io/slate</a>.</em></p>
 
+
+Deploy
+------------
+
+Publishing Your Docs to Github Pages
+
+Publishing your API documentation couldn't be more simple.
+
+Make sure your origin is a Slate fork in your own account, not our original repo.
+
+1. Commit your changes to the markdown source: git commit -a -m "Update index.md"
+2. Push the markdown source changes to Github: git push
+3. Run ./deploy.sh
+
+Done! Your changes should now be live on http://yourusername.github.io/slate, and the main branch should be updated with your edited markdown. Note that if this is your first time publishing Slate, it can sometimes take ten minutes or so before your content is available online.
+
+Also, thanks to X1011 for the excellent deploy script.
+
+Publishing Your Docs to Your Own Server
+
+You can publish documents to your own server using bundle exec middleman build --clean. Middleman will build your website to the build directory of your project, and you can copy those static HTML files to the server of your choice.
+
+
 Features
 ------------
 
