@@ -35,11 +35,14 @@ When you're looking for a custom connection of your VOIP/phone solution to Planh
 
 Property | Description
 --------- | -----------
-nr* | Phone number of the contact you called, this can be used to match against customer and enduser in Planhat, if the userId of the contact is not provided.
+nr* | Phone number of the contact you called, this can be used to match against customer and enduser in Planhat if the userId of the contact is not provided.
 userId* | Identify the user (contact) to whom you were talking by the userId in you'r own system (externaId)
 phUserId* | Identify the user (contact) to whom you were talking by the userId in in Planhat
 agentId* | The agent's (your team member's) user id in your on system, used to find a matching "agent" / team member
 phAgentId* | The agent's (your team member's) user id in Planhat, used to find a matching "agent" / team member
+companyId | The company Id in your own system. Can be used to identify the company if no contact is provided or can be found
+phCompanyId | The Planhat companyId. Can be used to identify the company if no contact is provided or can be found
+agentName | Name of the user who called, useful if the agent (user within your organization) is not a Planhat user
 start | When call started
 end | When the call ended
 waiting | In seconds, the waiting time before the "talk" started (waiting + talk_duration = end - start)

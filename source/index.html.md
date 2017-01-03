@@ -14,6 +14,7 @@ includes:
   - activity
   - metrics
   - companies
+  - licenses
   - contacts
   - calls
   - team
