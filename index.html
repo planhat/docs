@@ -489,6 +489,96 @@ Whatever the status of the company it&rsquo;s the same object and end-point.</p>
 
 <p><code class="prettyprint">GET: https://api.planhat.com/leancompanies?externalId=yourid123</code></p>
 
+          <h1 id="licenses-subscriptions">Licenses (Subscriptions)</h1>
+
+<p>A company can have multiple concurrent licenses, presently, historically and in the future.
+A number of important metrics such as the customer&rsquo;s MRR and lifecycle phase are calculated based on the
+license data.</p>
+
+<p><code class="prettyprint">POST: /companies/:companyId/licenses</code></p>
+
+<p><code class="prettyprint">GET: /companies/:companyId/licenses/:id</code></p>
+
+<p><code class="prettyprint">PUT: /companies/:companyId/licenses/:id</code></p>
+
+<p><code class="prettyprint">DELETE: /companies/:companyId/licenses/:id</code></p>
+
+<h3 id="properties">Properties</h3>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>externalId</td>
+<td>String</td>
+<td>License id in your system, in SalesForce or in some other external system you&rsquo;re using to manage you licenses.</td>
+</tr>
+<tr>
+<td>product</td>
+<td>String</td>
+<td>Name of the license product. Not required but highly recommended. Even if you only have one product we suggest adding it as &ldquo;License Fee&rdquo; or &ldquo;Subscription&rdquo;.</td>
+</tr>
+<tr>
+<td>_currency*</td>
+<td>String</td>
+<td>The currency code, for example &ldquo;USD&rdquo;. There is a &ldquo;soft&rdquo; mapping to the id&rsquo;s in your list of currencies. Technically we accept any string but we recommend using standard currency codes as Ids. Since the mapping is soft you can add licenses with a currency code not yet available in your list fo currencies.</td>
+</tr>
+<tr>
+<td>fromDate*</td>
+<td>Date</td>
+<td>Start of the license period.</td>
+</tr>
+<tr>
+<td>toDate</td>
+<td>Date</td>
+<td>End of the license period</td>
+</tr>
+<tr>
+<td>fixedPeriod</td>
+<td>Boolean</td>
+<td>Boolean to indicate if this is an ongoing license (no defined end date) or license with a fixed term. Non fixed-term licenses require an mrr value specified, whereas fixed-term licenses specify the value over the whole period.</td>
+</tr>
+<tr>
+<td>mrr*</td>
+<td>Number</td>
+<td>The monthly license value (required if fixedPeriod is false)</td>
+</tr>
+<tr>
+<td>value*</td>
+<td>Number</td>
+<td>The total license value for the whole subscription period, must be positive (required if fixedPeriod is true and no mrr value)</td>
+</tr>
+<tr>
+<td>renewalStatus</td>
+<td>String</td>
+<td>Can take one of the following values: &lsquo;ongoing&rsquo;, &#39;renewed&rsquo;, &#39;lost&rsquo;</td>
+</tr>
+<tr>
+<td>autoRenews</td>
+<td>Boolean</td>
+<td>If set to true Planhat can automatically renew the subscription for you once the notice period is passed.</td>
+</tr>
+<tr>
+<td>renewalPeriod</td>
+<td>Number</td>
+<td>Defines the length of the next license period if the subscription should be renewed. Defaults to 1, which would mean the license renews with a new 1-month period, regardless of the length of the current license period. If the renewalPeriod is not set, it will be assumed that the contract renews on the same period as previous. If the license isn&rsquo;t set to autorenew the renewalPeriod will only serve as guidance for the manual input.</td>
+</tr>
+<tr>
+<td>noticePeriod</td>
+<td>Number</td>
+<td>Number of days before subscription end date that the license would have to be canceled not to automatically renew. Only makes sense if autoRenews is set to true. Defaults to 0.</td>
+</tr>
+<tr>
+<td>custom</td>
+<td>Object</td>
+<td>A flexible object with custom data, one level. Add any custom data points on the form. Use short and human friendly names as keys. For example &ldquo;Plan&rdquo; or &ldquo;Subscription Plan&rdquo; is better than &ldquo;SUBSCRIPTION_PLAN&rdquo;, as this is how it will be displayed in Planhat. Date, Strings, Boolean, Number are allowed types.</td>
+</tr>
+</tbody></table>
+
           <h1 id="contacts">Contacts</h1>
 
 <p>These are people working at your customers, business contacts as well as your actual end users.</p>
@@ -596,7 +686,7 @@ https://api.planhat.com/calls
 </thead><tbody>
 <tr>
 <td>nr*</td>
-<td>Phone number of the contact you called, this can be used to match against customer and enduser in Planhat, if the userId of the contact is not provided.</td>
+<td>Phone number of the contact you called, this can be used to match against customer and enduser in Planhat if the userId of the contact is not provided.</td>
 </tr>
 <tr>
 <td>userId*</td>
@@ -613,6 +703,18 @@ https://api.planhat.com/calls
 <tr>
 <td>phAgentId*</td>
 <td>The agent&rsquo;s (your team member&rsquo;s) user id in Planhat, used to find a matching &ldquo;agent&rdquo; / team member</td>
+</tr>
+<tr>
+<td>companyId</td>
+<td>The company Id in your own system. Can be used to identify the company if no contact is provided or can be found</td>
+</tr>
+<tr>
+<td>phCompanyId</td>
+<td>The Planhat companyId. Can be used to identify the company if no contact is provided or can be found</td>
+</tr>
+<tr>
+<td>agentName</td>
+<td>Name of the user who called, useful if the agent (user within your organization) is not a Planhat user</td>
 </tr>
 <tr>
 <td>start</td>
