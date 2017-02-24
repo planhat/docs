@@ -12,7 +12,7 @@ Depending on what metrics you pick you might either want to send it as it happen
 
 Note: The end point accepts either a single object or an array, which can be useful if you run a batch update with some intervall, or if you initially would like to load historical data.
 
-`POST: https://api.planhat.com/[YOUR_TENANT_TOKEN]/dimensiondata`
+`POST: /[YOUR_TENANT_TOKEN]/dimensiondata`
 
 Property | Description
 --------- | -----------

@@ -11,6 +11,7 @@ toc_footers:
 includes:
   - intro
   - authentication
+  - base-url
   - activity
   - metrics
   - companies

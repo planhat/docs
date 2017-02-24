@@ -22,15 +22,15 @@ https://api.planhat.com/calls
 When you're looking for a custom connection of your VOIP/phone solution to Planhat this is the end point.
 
 
-`POST:  https://api.planhat.com/calls`
+`POST: /calls`
 
-`POST:  https://api.planhat.com/[YOUR_TENANT_ID]/calls` (open, no auth header)
+`POST: /[YOUR_TENANT_ID]/calls` (open, no auth header)
 
-`GET:  https://api.planhat.com/calls/:id`
+`GET: /calls/:id`
 
-`PUT:  https://api.planhat.com/calls/:id`
+`PUT: /calls/:id`
 
-`DELETE:  https://api.planhat.com/calls/:id`
+`DELETE: /calls/:id`
 
 
 Property | Description

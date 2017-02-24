@@ -13,13 +13,13 @@ https://api.planhat.com/companies
 Companies, sometimes referred to as "Accounts", are your customers. It also covers companies that previously were your customer and potentially new customers (prospects).
 Whatever the status of the company it's the same object and end-point.
 
-`POST: https://api.planhat.com/companies`
+`POST: /companies`
 
-`GET: https://api.planhat.com/companies/:id`
+`GET: /companies/:id`
 
-`PUT: https://api.planhat.com/companies/:id`
+`PUT: /companies/:id`
 
-`DELETE: https://api.planhat.com/companies/:id`
+`DELETE: /companies/:id`
 
 
 ### Properties
@@ -42,4 +42,4 @@ custom | A flexible object with custom data, one level. Add any custom data poin
 
 When you need a lightweight list of all companies in Planhat to match against your own id's etc.
 
-`GET: https://api.planhat.com/leancompanies?externalId=yourid123`
+`GET: /leancompanies?externalId=yourid123`

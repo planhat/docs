@@ -4,13 +4,13 @@
 These are people working at your customers, business contacts as well as your actual end users.
 
 
-`POST:  https://api.planhat.com/endusers`
+`POST: /endusers`
 
-`GET:  https://api.planhat.com/endusers/:id`
+`GET: /endusers/:id`
 
-`PUT:  https://api.planhat.com/endusers/:id`
+`PUT: /endusers/:id`
 
-`DELETE:  https://api.planhat.com/endusers/:id`
+`DELETE: /endusers/:id`
 
 The GET request can be filtered to only list users at a specific company.
 

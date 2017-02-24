@@ -13,18 +13,20 @@ In addition to page views you can probably find even more meaningful metrics suc
 ### How to track
 There are 3 different ways of getting your end-user activity into Planhat.
 
-1. API
+1. API (real time)
 2. Planhat Tracking Script
 3. Segment
+4. API Bulk
+5. API Stream
 
 
-## 1. API
+## 1. API (real time)
 ```shell
 # With the open end-point no auth required
 curl -X POST \
 -H "Content-Type: application/json" \
 -d '{"email": "ariana.wright_0@daimler.com", "action": "Logged in", "info": {"index": 20, "theme": "Blue"}, "date": "2016-10-13T08:00:00.000Z"}' \
-https://api.planhat.com/[YOUR_TENANT_ID]/activities
+https://api.planhat.com/analytics/[YOUR_TENANT_ID]
 ```
 > Remember to replace the tenant id above with your own.
 
@@ -33,7 +35,7 @@ Once the activity/event is captured you can simply forward it from your servers 
 
 
 
-`POST: https://api.planhat.com/[YOUR_TENANT_ID]/activities`
+`POST: /analytics/[YOUR_TENANT_ID]`
 
 Property | Description
 --------- | -----------
@@ -45,6 +47,7 @@ weight | optional parameter in case you want to give more RELATIVE importance to
 date | Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.
 action | Parameter describing the user activity. Typically on the form Action + Object, for example “Sent Invoice”,but it could also be just “Login” or whatever describes the activity event. This parameter is optional, but highly recommended and required if you want the appear in the event stream.
 info | An optional, valid JSON object where you can add additional information related to the event. If the user activity was "purchased a gift card" then it might make sense to add info about the price, or product category.
+
 
 
 ## 2. Planhat Tracking Script
@@ -161,3 +164,62 @@ Events will be completely ignored when any of the following conditions are met
 
 ### Un Assigned Users
 If we receive a call (Identify or Track) for a user that doesn't yet exist in Planhat, and the request does NOT contain information about which customer it relates to, and we have no other way to relate the user to a customer with reasonable confidence, then it will be discarded but added a report in Planhat to help you identify potential issues with the integration. Typically this may happen when users that loggedin (with a persistant session) before the integration was activated. Events from these users will end up in the log, and eventually as the user gets logged out and login again it'll start working as expected.
+
+
+
+## 4. API Bulk
+```shell
+# With the open end-point no auth required
+curl -X POST \
+-H "Content-Type: application/json" \
+-d '[{"name": "Ariana Wright" "email": "ariana.wright@daimlor.com", "cId": "abc123", ""action": "Logged in", "date": "2016-10-13T08:00:00.000Z", "weight": 1, "count": 1}]' \
+https://api.planhat.com/analytics/bulk/[YOUR_TENANT_ID]
+```
+> Remember to replace the tenant id above with your own.
+
+The body contains an array of events. There is an upper limit on the body size of 10 Mb for each post, which typically corresponds to about 50,000 items. If you need more that that or if your data is on a csv format, the streaming option (see next section) is a better option.
+
+
+`POST: /analytics/bulk/[YOUR_TENANT_ID]`
+
+Property | Description
+--------- | -----------
+name | Full name of the contact/user.
+email* | The contact’s id (user_id) in your system (required if externalId not specified)
+id* | The contact’s id (user_id) in your system (required if email not specified)
+cId | Typically the account/customer id in your system, the same id have to be present as externlId in Planhat.This is required to automatically add new end-users to the correct customer profile in Planhat. If left out, a Customer Success Rep will manually have to assign new end-users to the appropriate customer, or Planhat will make a qualified guess when certain enough it will be correct.
+weight | Weight. optional parameter in case you want to give more RELATIVE importance to certain events, otherwise ignore or set to 1 which is the default.
+date | Date. Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.
+action | Action. Parameter describing the user activity. Typically on the form Action + Object, for example “Sent Invoice”,but it could also be just “Login” or whatever describes the activity event. This parameter is optional, but highly recommended and required if you want the appear in the event stream.
+count | Indicate if the event happened multiple times, for example if the import cover past 24 hours and a given user logged in twice during this period, you could send it as one row and instead set the count to 2, of course they'd get the exact same date, but mostly this is not an issue. Defaults to one (1).
+
+
+## 5. API Stream
+
+```javascript
+// Node Example of streaing a csv file to Planhat
+var fs = require('fs');
+var request = require('request');
+var YOUR_TENANT_ID = 'fb08c97b-41f5-4a22-8888-579a3ce223ae';
+var endPoint = 'https://api.planhat.com/analytics/stream/csv/'+YOUR_TENANT_ID;
+
+fs.createReadStream('sampleData.csv').pipe(request.put(endPoint));
+```
+
+`PUT: /analytics/stream/csv/[YOUR_TENANT_ID]`
+
+The csv file should have the following header:
+cId, id, name, email, weight, action, date, count
+
+
+
+Property | Description
+--------- | -----------
+name | Full name of the contact/user.
+email* | The contact’s id (user_id) in your system (required if externalId not specified)
+id* | The contact’s id (user_id) in your system (required if email not specified)
+cId | Typically the account/customer id in your system, the same id have to be present as externlId in Planhat.This is required to automatically add new end-users to the correct customer profile in Planhat. If left out, a Customer Success Rep will manually have to assign new end-users to the appropriate customer, or Planhat will make a qualified guess when certain enough it will be correct.
+weight | Weight. optional parameter in case you want to give more RELATIVE importance to certain events, otherwise ignore or set to 1 which is the default.
+date | Date. Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.
+action | Action. Parameter describing the user activity. Typically on the form Action + Object, for example “Sent Invoice”,but it could also be just “Login” or whatever describes the activity event. This parameter is optional, but highly recommended and required if you want the appear in the event stream.
+count | Indicate if the event happened multiple times, for example if the import cover past 24 hours and a given user logged in twice during this period, you could send it as one row and instead set the count to 2, of course they'd get the exact same date, but mostly this is not an issue. Defaults to one (1).
