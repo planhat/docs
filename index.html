@@ -158,6 +158,28 @@ curl https://api.planhat.com/myprofile
 Note the colon after the token if you go with the Basic approach. It’s required even though there is no password.
 </aside>
 
+          <h1 id="base-url">Base URL</h1>
+
+<p>Depending on where you&rsquo;re located, the base URL to access the Planhat API may differ.</p>
+
+<p><code class="prettyprint">https://api.planhat.com</code></p>
+
+<p>OR</p>
+
+<p><code class="prettyprint">https://api-eu.planhat.com</code></p>
+
+<p>So if you see a resource end-point like this one:</p>
+
+<p>POST: /analytics/[YOUR_TENANT_ID]</p>
+
+<p>It implies the full URL will be either</p>
+
+<p><code class="prettyprint">https://api.planhat.com/analytics/[YOUR_TENANT_ID]</code></p>
+
+<p>or</p>
+
+<p><code class="prettyprint">https://api-eu.planhat.com/analytics/[YOUR_TENANT_ID]</code></p>
+
           <h1 id="user-tracking">User Tracking</h1>
 
 <p>Keeping track of your end-user activity is an important part of the Customer Success effort. Getting started involves only two steps.</p>
@@ -178,17 +200,19 @@ Note the colon after the token if you go with the Basic approach. It’s require
 <p>There are 3 different ways of getting your end-user activity into Planhat.</p>
 
 <ol>
-<li>API</li>
+<li>API (real time)</li>
 <li>Planhat Tracking Script</li>
 <li>Segment</li>
+<li>API Bulk</li>
+<li>API Stream</li>
 </ol>
 
-<h2 id="1-api">1. API</h2>
+<h2 id="1-api-real-time">1. API (real time)</h2>
 <pre class="highlight shell"><code><span class="c"># With the open end-point no auth required</span>
 curl -X POST <span class="se">\</span>
 -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
 -d <span class="s1">'{"email": "ariana.wright_0@daimler.com", "action": "Logged in", "info": {"index": 20, "theme": "Blue"}, "date": "2016-10-13T08:00:00.000Z"}'</span> <span class="se">\</span>
-https://api.planhat.com/[YOUR_TENANT_ID]/activities
+https://api.planhat.com/analytics/[YOUR_TENANT_ID]
 </code></pre>
 
 <blockquote>
@@ -198,7 +222,7 @@ https://api.planhat.com/[YOUR_TENANT_ID]/activities
 <p>User activity relevant for your Customer Success strategies will typically involve a call to your servers.
 Once the activity/event is captured you can simply forward it from your servers to Planhat’s activity end-point:</p>
 
-<p><code class="prettyprint">POST: https://api.planhat.com/[YOUR_TENANT_ID]/activities</code></p>
+<p><code class="prettyprint">POST: /analytics/[YOUR_TENANT_ID]</code></p>
 
 <table><thead>
 <tr>
@@ -375,6 +399,117 @@ Preferably use event names on the form &ldquo;verb + noun&rdquo;. For example &l
 
 <p>If we receive a call (Identify or Track) for a user that doesn&rsquo;t yet exist in Planhat, and the request does NOT contain information about which customer it relates to, and we have no other way to relate the user to a customer with reasonable confidence, then it will be discarded but added a report in Planhat to help you identify potential issues with the integration. Typically this may happen when users that loggedin (with a persistant session) before the integration was activated. Events from these users will end up in the log, and eventually as the user gets logged out and login again it&rsquo;ll start working as expected.</p>
 
+<h2 id="4-api-bulk">4. API Bulk</h2>
+<pre class="highlight shell"><code><span class="c"># With the open end-point no auth required</span>
+curl -X POST <span class="se">\</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'[{"name": "Ariana Wright" "email": "ariana.wright@daimlor.com", "cId": "abc123", ""action": "Logged in", "date": "2016-10-13T08:00:00.000Z", "weight": 1, "count": 1}]'</span> <span class="se">\</span>
+https://api.planhat.com/analytics/bulk/[YOUR_TENANT_ID]
+</code></pre>
+
+<blockquote>
+<p>Remember to replace the tenant id above with your own.</p>
+</blockquote>
+
+<p>The body contains an array of events. There is an upper limit on the body size of 10 Mb for each post, which typically corresponds to about 50,000 items. If you need more that that or if your data is on a csv format, the streaming option (see next section) is a better option.</p>
+
+<p><code class="prettyprint">POST: /analytics/bulk/[YOUR_TENANT_ID]</code></p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>name</td>
+<td>Full name of the contact/user.</td>
+</tr>
+<tr>
+<td>email*</td>
+<td>The contact’s id (user_id) in your system (required if externalId not specified)</td>
+</tr>
+<tr>
+<td>id*</td>
+<td>The contact’s id (user_id) in your system (required if email not specified)</td>
+</tr>
+<tr>
+<td>cId</td>
+<td>Typically the account/customer id in your system, the same id have to be present as externlId in Planhat.This is required to automatically add new end-users to the correct customer profile in Planhat. If left out, a Customer Success Rep will manually have to assign new end-users to the appropriate customer, or Planhat will make a qualified guess when certain enough it will be correct.</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>Weight. optional parameter in case you want to give more RELATIVE importance to certain events, otherwise ignore or set to 1 which is the default.</td>
+</tr>
+<tr>
+<td>date</td>
+<td>Date. Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.</td>
+</tr>
+<tr>
+<td>action</td>
+<td>Action. Parameter describing the user activity. Typically on the form Action + Object, for example “Sent Invoice”,but it could also be just “Login” or whatever describes the activity event. This parameter is optional, but highly recommended and required if you want the appear in the event stream.</td>
+</tr>
+<tr>
+<td>count</td>
+<td>Indicate if the event happened multiple times, for example if the import cover past 24 hours and a given user logged in twice during this period, you could send it as one row and instead set the count to 2, of course they&rsquo;d get the exact same date, but mostly this is not an issue. Defaults to one (1).</td>
+</tr>
+</tbody></table>
+
+<h2 id="5-api-stream">5. API Stream</h2>
+<pre class="highlight javascript"><code><span class="c1">// Node Example of streaing a csv file to Planhat</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'fs'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">request</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'request'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">YOUR_TENANT_ID</span> <span class="o">=</span> <span class="s1">'fb08c97b-41f5-4a22-8888-579a3ce223ae'</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">endPoint</span> <span class="o">=</span> <span class="s1">'https://api.planhat.com/analytics/stream/csv/'</span><span class="o">+</span><span class="nx">YOUR_TENANT_ID</span><span class="p">;</span>
+
+<span class="nx">fs</span><span class="p">.</span><span class="nx">createReadStream</span><span class="p">(</span><span class="s1">'sampleData.csv'</span><span class="p">).</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">endPoint</span><span class="p">));</span>
+</code></pre>
+
+<p><code class="prettyprint">PUT: /analytics/stream/csv/[YOUR_TENANT_ID]</code></p>
+
+<p>The csv file should have the following header:
+cId, id, name, email, weight, action, date, count</p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>name</td>
+<td>Full name of the contact/user.</td>
+</tr>
+<tr>
+<td>email*</td>
+<td>The contact’s id (user_id) in your system (required if externalId not specified)</td>
+</tr>
+<tr>
+<td>id*</td>
+<td>The contact’s id (user_id) in your system (required if email not specified)</td>
+</tr>
+<tr>
+<td>cId</td>
+<td>Typically the account/customer id in your system, the same id have to be present as externlId in Planhat.This is required to automatically add new end-users to the correct customer profile in Planhat. If left out, a Customer Success Rep will manually have to assign new end-users to the appropriate customer, or Planhat will make a qualified guess when certain enough it will be correct.</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>Weight. optional parameter in case you want to give more RELATIVE importance to certain events, otherwise ignore or set to 1 which is the default.</td>
+</tr>
+<tr>
+<td>date</td>
+<td>Date. Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.</td>
+</tr>
+<tr>
+<td>action</td>
+<td>Action. Parameter describing the user activity. Typically on the form Action + Object, for example “Sent Invoice”,but it could also be just “Login” or whatever describes the activity event. This parameter is optional, but highly recommended and required if you want the appear in the event stream.</td>
+</tr>
+<tr>
+<td>count</td>
+<td>Indicate if the event happened multiple times, for example if the import cover past 24 hours and a given user logged in twice during this period, you could send it as one row and instead set the count to 2, of course they&rsquo;d get the exact same date, but mostly this is not an issue. Defaults to one (1).</td>
+</tr>
+</tbody></table>
+
           <h1 id="metrics">Metrics</h1>
 <pre class="highlight shell"><code>curl -X POST <span class="se">\</span>
 -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
@@ -388,7 +523,7 @@ https://api.planhat.com/[YOUR_TENANT_TOKEN]/dimensiondata
 
 <p>Note: The end point accepts either a single object or an array, which can be useful if you run a batch update with some intervall, or if you initially would like to load historical data.</p>
 
-<p><code class="prettyprint">POST: https://api.planhat.com/[YOUR_TENANT_TOKEN]/dimensiondata</code></p>
+<p><code class="prettyprint">POST: /[YOUR_TENANT_TOKEN]/dimensiondata</code></p>
 
 <table><thead>
 <tr>
@@ -433,13 +568,13 @@ https://api.planhat.com/companies
 <p>Companies, sometimes referred to as &ldquo;Accounts&rdquo;, are your customers. It also covers companies that previously were your customer and potentially new customers (prospects).
 Whatever the status of the company it&rsquo;s the same object and end-point.</p>
 
-<p><code class="prettyprint">POST: https://api.planhat.com/companies</code></p>
+<p><code class="prettyprint">POST: /companies</code></p>
 
-<p><code class="prettyprint">GET: https://api.planhat.com/companies/:id</code></p>
+<p><code class="prettyprint">GET: /companies/:id</code></p>
 
-<p><code class="prettyprint">PUT: https://api.planhat.com/companies/:id</code></p>
+<p><code class="prettyprint">PUT: /companies/:id</code></p>
 
-<p><code class="prettyprint">DELETE: https://api.planhat.com/companies/:id</code></p>
+<p><code class="prettyprint">DELETE: /companies/:id</code></p>
 
 <h3 id="properties">Properties</h3>
 
@@ -487,7 +622,7 @@ Whatever the status of the company it&rsquo;s the same object and end-point.</p>
 
 <p>When you need a lightweight list of all companies in Planhat to match against your own id&rsquo;s etc.</p>
 
-<p><code class="prettyprint">GET: https://api.planhat.com/leancompanies?externalId=yourid123</code></p>
+<p><code class="prettyprint">GET: /leancompanies?externalId=yourid123</code></p>
 
           <h1 id="licenses-subscriptions">Licenses (Subscriptions)</h1>
 
@@ -583,13 +718,13 @@ license data.</p>
 
 <p>These are people working at your customers, business contacts as well as your actual end users.</p>
 
-<p><code class="prettyprint">POST:  https://api.planhat.com/endusers</code></p>
+<p><code class="prettyprint">POST: /endusers</code></p>
 
-<p><code class="prettyprint">GET:  https://api.planhat.com/endusers/:id</code></p>
+<p><code class="prettyprint">GET: /endusers/:id</code></p>
 
-<p><code class="prettyprint">PUT:  https://api.planhat.com/endusers/:id</code></p>
+<p><code class="prettyprint">PUT: /endusers/:id</code></p>
 
-<p><code class="prettyprint">DELETE:  https://api.planhat.com/endusers/:id</code></p>
+<p><code class="prettyprint">DELETE: /endusers/:id</code></p>
 
 <p>The GET request can be filtered to only list users at a specific company.</p>
 
@@ -668,15 +803,15 @@ https://api.planhat.com/calls
 
 <p>When you&rsquo;re looking for a custom connection of your VOIP/phone solution to Planhat this is the end point.</p>
 
-<p><code class="prettyprint">POST:  https://api.planhat.com/calls</code></p>
+<p><code class="prettyprint">POST: /calls</code></p>
 
-<p><code class="prettyprint">POST:  https://api.planhat.com/[YOUR_TENANT_ID]/calls</code> (open, no auth header)</p>
+<p><code class="prettyprint">POST: /[YOUR_TENANT_ID]/calls</code> (open, no auth header)</p>
 
-<p><code class="prettyprint">GET:  https://api.planhat.com/calls/:id</code></p>
+<p><code class="prettyprint">GET: /calls/:id</code></p>
 
-<p><code class="prettyprint">PUT:  https://api.planhat.com/calls/:id</code></p>
+<p><code class="prettyprint">PUT: /calls/:id</code></p>
 
-<p><code class="prettyprint">DELETE:  https://api.planhat.com/calls/:id</code></p>
+<p><code class="prettyprint">DELETE: /calls/:id</code></p>
 
 <table><thead>
 <tr>
@@ -744,7 +879,7 @@ https://api.planhat.com/calls
 
 <p>If you would like to add the owner property while creating new companies and you have the user&rsquo;s email but not the planhat id, then this end-point will help:</p>
 
-<p><code class="prettyprint">GET: https://api.planhat.com/users?email=yourcolleaguesname@yourcompany.com</code></p>
+<p><code class="prettyprint">GET: /users?email=yourcolleaguesname@yourcompany.com</code></p>
 
           <h1 id="other-end-points">Other end-points</h1>
 
