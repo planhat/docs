@@ -97,24 +97,16 @@ If you can make the actions somewhat specific it's typically valuable.
 For example the action "Viewed a Page" could be further specified like "Viewed Settings Page", or "Viewed Page 'path/to/page'"
 EXTRA_INFO / WEIGHT | Most likely the actions your end-users take in your service are not equally important. Generating a report, adding a comment, creating a project etc perhaps means more than a simple page view. To reflect this a parameter "weight" can optionally be added to each tracking call as a way to indicate the relative importance of different actions. Since it's relative, the absolute value (baseline) doesn't matter. But to make it readable in Planhat a guideline is to have an average user accumulate weights of 100 or less over a month.
 
-<aside class="notice">
-If you know you'll be adding multiple tracking scripts and don't want to use Segment consider
-creating your own container and adding the tracking to that "proxy" as described in [this
-quora answer](http://www.quora.com/Whats-the-best-way-to-use-Google-Analytics-and-Mixpanel).
-</aside>
-
 ## 3. Segment
 > Sample post to test the end-point without the need to pass through Segment.  Note the intentional colon (:) after your access token.
 
 ```shell
 curl -X POST \
---user "[PERSONAL_ACCESS_TOKEN]:"
+--user "[YOUR_TENANT_TOKEN]:"
 -H "Content-Type: application/json" \
 -d '{"type": "identify", "traits": {"name":  "Peter Gibbons", "email": "peter@initech.com", "companyId": "ABCDE"}}' \
 https://api.planhat.com/dock/segment
 ```
-
-
 
 
 As a third option, Segment can be used to send User Events (user tracking data) to Planhat. When we receive an event from Segment,

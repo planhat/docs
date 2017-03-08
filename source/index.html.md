@@ -18,6 +18,7 @@ includes:
   - licenses
   - contacts
   - calls
+  - tickets
   - team
   - other
 
