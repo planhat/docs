@@ -5,7 +5,7 @@
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>API Reference</title>
-
+    <link rel="icon" href="https://www.planhat.com/planhat_favi.png" type="image/x-icon">
     <style>
       .highlight table td { padding: 5px; }
 .highlight table pre { margin: 0; }
@@ -336,19 +336,13 @@ plantrack.track(ACTION, [EXTRA_INFO]) from your app, for example:</p>
 For example the action &ldquo;Viewed a Page&rdquo; could be further specified like &ldquo;Viewed Settings Page&rdquo;, or &ldquo;Viewed Page &lsquo;path/to/page&rsquo;&rdquo;
 EXTRA_INFO / WEIGHT | Most likely the actions your end-users take in your service are not equally important. Generating a report, adding a comment, creating a project etc perhaps means more than a simple page view. To reflect this a parameter &ldquo;weight&rdquo; can optionally be added to each tracking call as a way to indicate the relative importance of different actions. Since it&rsquo;s relative, the absolute value (baseline) doesn&rsquo;t matter. But to make it readable in Planhat a guideline is to have an average user accumulate weights of 100 or less over a month.</p>
 
-<aside class="notice">
-If you know you&rsquo;ll be adding multiple tracking scripts and don&rsquo;t want to use Segment consider
-creating your own container and adding the tracking to that &ldquo;proxy&rdquo; as described in [this
-quora answer](http://www.quora.com/Whats-the-best-way-to-use-Google-Analytics-and-Mixpanel).
-</aside>
-
 <h2 id="3-segment">3. Segment</h2>
 
 <blockquote>
 <p>Sample post to test the end-point without the need to pass through Segment.  Note the intentional colon (:) after your access token.</p>
 </blockquote>
 <pre class="highlight shell"><code>curl -X POST <span class="se">\</span>
---user <span class="s2">"[PERSONAL_ACCESS_TOKEN]:"</span>
+--user <span class="s2">"[YOUR_TENANT_TOKEN]:"</span>
 -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
 -d <span class="s1">'{"type": "identify", "traits": {"name":  "Peter Gibbons", "email": "peter@initech.com", "companyId": "ABCDE"}}'</span> <span class="se">\</span>
 https://api.planhat.com/dock/segment
@@ -874,6 +868,104 @@ https://api.planhat.com/calls
 </tbody></table>
 
 <p>Preferably identify the customer contact by id (userId or phUserId), relying on the phone number is slightly less robust but will also work.</p>
+
+          <h1 id="tickets">Tickets</h1>
+
+<p>This end point doesn&rsquo;t have the normal GET, POST, PUT, DELETE.
+Create and update operations are combined into an &ldquo;upsert&rdquo; (PUT) request.
+The PUT body can contain either a single JSON object, or an array of objects (tickets)</p>
+
+<p>sourceId is used to determine if this is an update or create operation.</p>
+
+<aside class="notice">
+Note that if the email of a ticket doesn&rsquo;t match any user in Planhat, but there is enough information to create a new user,
+then Planhat will create a new user, link it to the corresponding customer, and then create the ticket with a link to that customer.
+</aside>
+<pre class="highlight shell"><code>
+curl -X PUT <span class="se">\</span>
+--user <span class="s2">"[PERSONAL_ACCESS_TOKEN]"</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{"source": "HomeGrownSupport", "sourceId": "123", "email": "max@customer.com", "createdAt": "2016-10-17T14:00:00.000Z", "updatedAt": "2016-10-17T14:02:00.000Z", "status": "resolved"}'</span> <span class="se">\</span>
+https://api.planhat.com/tickets
+</code></pre>
+
+<blockquote>
+<p>Replace <code class="prettyprint">[PERSONAL_ACCESS_TOKEN]</code> with your API key.</p>
+</blockquote>
+
+<p><code class="prettyprint">PUT: /tickets</code></p>
+
+<p><code class="prettyprint">GET: /tickets</code></p>
+
+<p><code class="prettyprint">DELETE: /tickets/:id</code></p>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>source</td>
+<td>The name of the system this ticket originates from. Typically &ldquo;Zendesk&rdquo;, &ldquo;Desk&rdquo; etc, but since you&rsquo;re reading these docs you may the tickets in some other tool.</td>
+</tr>
+<tr>
+<td>sourceId*</td>
+<td>Required. Id of the ticket in the source system</td>
+</tr>
+<tr>
+<td>email*</td>
+<td>Required. Email of the person who submitted the ticket. Items without email will be silently dropped.</td>
+</tr>
+<tr>
+<td>companyId</td>
+<td>The Planhat company Id, see the section &ldquo;Company lookup&rdquo; for a way to convert your internal id&rsquo;s to Planhat id&rsquo;s. Not required but can help automatically create a new user if it doesn&rsquo;t already exist.</td>
+</tr>
+<tr>
+<td>title</td>
+<td>If the ticket has a title or main subject.</td>
+</tr>
+<tr>
+<td>description</td>
+<td>Description of the ticket</td>
+</tr>
+<tr>
+<td>url</td>
+<td>Url to where more information can be found about this ticket.</td>
+</tr>
+<tr>
+<td>tags</td>
+<td>Array of Strings</td>
+</tr>
+<tr>
+<td>type</td>
+<td>the type of the ticket. Use as you like, but typically it could be: &ldquo;bug&rdquo;, &ldquo;feature request&rdquo;, &ldquo;training&rdquo; etc.</td>
+</tr>
+<tr>
+<td>severity</td>
+<td>String describing the severity, no restrictions on the scale apart from that.</td>
+</tr>
+<tr>
+<td>product</td>
+<td>Name of the product to which the ticket relates</td>
+</tr>
+<tr>
+<td>timeSpent</td>
+<td>Time spend on this ticket, measured in number of minutes, can be a decimal.</td>
+</tr>
+<tr>
+<td>createdAt</td>
+<td>Date</td>
+</tr>
+<tr>
+<td>updatedAt</td>
+<td>Date</td>
+</tr>
+<tr>
+<td>status</td>
+<td>String, you pick any status options you like. Typically &ldquo;new&rdquo;, &ldquo;penidng&rdquo;, &ldquo;open&rdquo;, &ldquo;resolved&rdquo;, &ldquo;closed&rdquo; or something similar.</td>
+</tr>
+</tbody></table>
 
           <h1 id="team">Team</h1>
 
