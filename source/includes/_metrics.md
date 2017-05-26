@@ -16,7 +16,7 @@ Note: The end point accepts either a single object or an array, which can be use
 
 Property | Description
 --------- | -----------
-dimensionId* | Any string without spaces or special characters. If you're sending "Share of Active Users" a good dimensionId might be "activeusershare". It's not displayed in Planhat but will be used when building Mealth Metrics / Success Indicators in Planhat.
+dimensionId* | Any string without spaces or special characters. If you're sending "Share of Active Users" a good dimensionId might be "activeusershare". It's not displayed in Planhat but will be used when building Health Metrics in Planhat.
 value* | The raw (number) value you would like to set.
 companyExternalId | This is the company id in your systems. For this to work the profiles in Planhat will need to have this externalId set.
 date | Pass any valid JavaScript date string to specify the date of the event. In none is provided we will use the time the request was received.

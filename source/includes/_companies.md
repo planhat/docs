@@ -40,6 +40,6 @@ custom | A flexible object with custom data, one level. Add any custom data poin
 
 ### Company lookup
 
-When you need a lightweight list of all companies in Planhat to match against your own id's etc.
+When you need a lightweight list of all companies in Planhat to match against your own id's etc. For each company profile in Planhat you'll get back the Planhat Id, External Id, Source ID (eg Salesforce) as well as the name and slug. If you want the mapping for a specific company you can specify "externalId" or "sourceId".
 
 `GET: /leancompanies?externalId=yourid123`
