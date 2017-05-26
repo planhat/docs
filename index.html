@@ -527,7 +527,7 @@ https://api.planhat.com/[YOUR_TENANT_TOKEN]/dimensiondata
 </thead><tbody>
 <tr>
 <td>dimensionId*</td>
-<td>Any string without spaces or special characters. If you&rsquo;re sending &ldquo;Share of Active Users&rdquo; a good dimensionId might be &ldquo;activeusershare&rdquo;. It&rsquo;s not displayed in Planhat but will be used when building Mealth Metrics / Success Indicators in Planhat.</td>
+<td>Any string without spaces or special characters. If you&rsquo;re sending &ldquo;Share of Active Users&rdquo; a good dimensionId might be &ldquo;activeusershare&rdquo;. It&rsquo;s not displayed in Planhat but will be used when building Health Metrics in Planhat.</td>
 </tr>
 <tr>
 <td>value*</td>
@@ -614,7 +614,7 @@ Whatever the status of the company it&rsquo;s the same object and end-point.</p>
 
 <h3 id="company-lookup">Company lookup</h3>
 
-<p>When you need a lightweight list of all companies in Planhat to match against your own id&rsquo;s etc.</p>
+<p>When you need a lightweight list of all companies in Planhat to match against your own id&rsquo;s etc. For each company profile in Planhat you&rsquo;ll get back the Planhat Id, External Id, Source ID (eg Salesforce) as well as the name and slug. If you want the mapping for a specific company you can specify &ldquo;externalId&rdquo; or &ldquo;sourceId&rdquo;.</p>
 
 <p><code class="prettyprint">GET: /leancompanies?externalId=yourid123</code></p>
 
@@ -918,8 +918,8 @@ https://api.planhat.com/tickets
 <td>Required. Email of the person who submitted the ticket. Items without email will be silently dropped.</td>
 </tr>
 <tr>
-<td>companyId</td>
-<td>The Planhat company Id, see the section &ldquo;Company lookup&rdquo; for a way to convert your internal id&rsquo;s to Planhat id&rsquo;s. Not required but can help automatically create a new user if it doesn&rsquo;t already exist.</td>
+<td>companyExternalId</td>
+<td>The External Company Id, see the section &ldquo;Company lookup&rdquo; for a way to convert between different customer id&rsquo;s. Not required but can help automatically create a new user if it doesn&rsquo;t already exist, or if there is no external user related to the ticket but you still want it linked to a customer.</td>
 </tr>
 <tr>
 <td>title</td>
