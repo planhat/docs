@@ -15,10 +15,12 @@ includes:
   - activity
   - metrics
   - companies
-  - licenses
+  - licenses-monthly
+  - licenses-mixed
   - contacts
   - calls
   - tickets
+  - nps
   - team
   - other
 

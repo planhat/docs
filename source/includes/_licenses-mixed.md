@@ -1,8 +1,8 @@
-# Licenses/Subscriptions - Mixed
+# Revenue - Mixed
 
 
-
-A company can have multiple concurrent licenses, presently, historically and in the future.
+If you're customers can have multiple (potentially) parallel licenses, and you need to manage notice periods, auto renewal Yes/No etc.
+Then you'll likely need to handle each subscription period individually.
 A number of important metrics such as the customer's MRR and lifecycle phase are calculated based on the
 license data.
 
