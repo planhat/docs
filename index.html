@@ -618,9 +618,83 @@ Whatever the status of the company it&rsquo;s the same object and end-point.</p>
 
 <p><code class="prettyprint">GET: /leancompanies?externalId=yourid123</code></p>
 
-          <h1 id="licenses-subscriptions">Licenses (Subscriptions)</h1>
+          <h1 id="revenue-monthly">Revenue - Monthly</h1>
 
-<p>A company can have multiple concurrent licenses, presently, historically and in the future.
+<p>If each of your customers only has one subscription plan at a time, and renewing monthly,
+then this is the easiest way to manage your subscription/license data through the API.
+A single end-point to handle new subscriptions, upgrades, downgrades and churn.</p>
+<pre class="highlight shell"><code><span class="c"># You call also use the authenticated end point to create calls</span>
+curl -X PUT <span class="se">\</span>
+--user <span class="s2">"[PERSONAL_ACCESS_TOKEN]"</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{"action": "newMrr", "data": [{"cId": "customer24", "value": 200, "currency": "SEK", "date": "2017-03-02T14:00:00.000Z"}]}'</span> <span class="se">\</span>
+https://api.planhat.com/licenses/actions
+</code></pre>
+
+<blockquote>
+<p>Replace <code class="prettyprint">[PERSONAL_ACCESS_TOKEN]</code> with your API key.</p>
+</blockquote>
+
+<p><code class="prettyprint">PUT: /licenses/actions</code></p>
+
+<h3 id="properties">Properties</h3>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>action*</td>
+<td>String</td>
+<td>You should set this value to: &ldquo;newMrr&rdquo;</td>
+</tr>
+<tr>
+<td>data*</td>
+<td>String</td>
+<td>This must be an array of updates (even if it&rsquo;s only one), each element containing the four properties below</td>
+</tr>
+<tr>
+<td>data.element cId*</td>
+<td>String</td>
+<td>External id of the company.</td>
+</tr>
+<tr>
+<td>data.element date*</td>
+<td>Date</td>
+<td>ISO date indication when the the new mrr takes effect (at the latest)</td>
+</tr>
+<tr>
+<td>data.element currency*</td>
+<td>String</td>
+<td>3 letter currency code, e.g, &ldquo;EUR&rdquo; or &ldquo;USD&rdquo;</td>
+</tr>
+<tr>
+<td>data.element value*</td>
+<td>Number</td>
+<td>the new mrr value</td>
+</tr>
+</tbody></table>
+
+<p>Typically you&rsquo;ll have some automated process to charge the subscription fee from your customer&rsquo;s credit cards.
+So when a customer pays for the first time you send the value and the date when the subscription started, mostly it will be the current date.</p>
+
+<p>From this point on you don&rsquo;t need to make any updates to planhat unless there is a chance.
+Planhat will automatically renew the subscription for another month at the end of each period.</p>
+
+<p>When there is an update, send the new mrr value and a date that either matches the exact start date of the period with the new value, or any other date within that period.
+For each of the updates received, Planhat will look for (and update) the first subscription period that has an end-date less than (but not equal to) the date provided.
+When the value of a subscription period is updated, all the subsequent periods (if any exist) will also be updated with the same value.</p>
+
+<p>To cancel a subscription, send a value of 0, that will remove the first subscription that has an end-date less than (but not equal to) the date provided.
+The preceding subscription period will keep it&rsquo;s value but get the status &ldquo;lost&rdquo;.</p>
+
+          <h1 id="revenue-mixed">Revenue - Mixed</h1>
+
+<p>If you&rsquo;re customers can have multiple (potentially) parallel licenses, and you need to manage notice periods, auto renewal Yes/No etc.
+Then you&rsquo;ll likely need to handle each subscription period individually.
 A number of important metrics such as the customer&rsquo;s MRR and lifecycle phase are calculated based on the
 license data.</p>
 
@@ -964,6 +1038,73 @@ https://api.planhat.com/tickets
 <tr>
 <td>status</td>
 <td>String, you pick any status options you like. Typically &ldquo;new&rdquo;, &ldquo;penidng&rdquo;, &ldquo;open&rdquo;, &ldquo;resolved&rdquo;, &ldquo;closed&rdquo; or something similar.</td>
+</tr>
+</tbody></table>
+
+          <h1 id="nps">NPS</h1>
+<pre class="highlight shell"><code><span class="c"># You call also use the authenticated end point to create calls</span>
+curl -X PUT <span class="se">\</span>
+--user <span class="s2">"[PERSONAL_ACCESS_TOKEN]"</span>
+-H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{"email": "john.smith@gmail.com", "score": 9, "comment": "Excellent UX", "dateSent": "2017-06-07T04:36:44Z", "dateAnswered": "2017-06-08T15:25:44Z", "source": "custom-nps.com", "sourceId": "4651"}'</span> <span class="se">\</span>
+https://api.planhat.com/nps
+</code></pre>
+
+<blockquote>
+<p>Replace <code class="prettyprint">[PERSONAL_ACCESS_TOKEN]</code> with your API key.</p>
+</blockquote>
+
+<p>A contact in Planhat can be linked to multiple NPS survey responses, but only the last one will be used to get a score on company level.</p>
+
+<p><code class="prettyprint">GET: /nps</code></p>
+
+<p><code class="prettyprint">PUT: /nps</code></p>
+
+<p><code class="prettyprint">DELETE: /nps/:id</code></p>
+
+<h3 id="properties">Properties</h3>
+
+<table><thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>email*</td>
+<td>String</td>
+<td>Email of the contact that has been surveyed</td>
+</tr>
+<tr>
+<td>score*</td>
+<td>Number</td>
+<td>Feedback score that the user submit in his/her survey (0-10)</td>
+</tr>
+<tr>
+<td>comment</td>
+<td>Sting</td>
+<td>The comment when the user gives an score in survey</td>
+</tr>
+<tr>
+<td>dateSent</td>
+<td>Date</td>
+<td>ISO date when the survey was sent</td>
+</tr>
+<tr>
+<td>dateAnswered</td>
+<td>Date</td>
+<td>ISO date when the survey was answered</td>
+</tr>
+<tr>
+<td>source</td>
+<td>String</td>
+<td>The name of the system that NPS scores come from. For example: “custom-nps.com”.</td>
+</tr>
+<tr>
+<td>sourceId</td>
+<td>String</td>
+<td>The id of the NPS score (response) in your system. This id is used as a matching key for update if already there’s an score with this sourceId</td>
 </tr>
 </tbody></table>
 
